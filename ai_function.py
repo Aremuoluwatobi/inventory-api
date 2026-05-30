@@ -6,27 +6,28 @@ OLLAMA_URL = "http://localhost:11434/api/generate"
 def categorize_inventory(description):
     payload = {
         "model": "llama3.1",
-
         "prompt": f"""
 You are an inventory categorizer.
 
-classify the inventory into ONE category only:
-Food, Health, Gadget, Transport, Electronics, Shopping, others.
+Classify the inventory into ONE category only:
+Food, Health, Gadget, Transport, Electronics, Shopping, Others.
+
+Rules:
+Return one category with no explanation
 
 Inventory: {description}
 
-return only the category name.""",
-
+Return only the category name.
+""",
         "stream": False
     }
 
-    response = requests.post(
-        OLLAMA_URL,
-        json=payload
-    )
+    try:
+        response = requests.post(OLLAMA_URL, json=payload, timeout=30)
+        response.raise_for_status()
 
-    result = response.json()
+        result = response.json()
+        return result.get("response", "").strip()
 
-    category = result.get("response", "").strip()
-
-    return category
+    except requests.exceptions.RequestException as e:
+        return f"Error: {str(e)}"
